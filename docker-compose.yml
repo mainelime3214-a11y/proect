@@ -1,9 +1,6 @@
-version: '3.7'
 services:
-  # Сервис базы данных PostgreSQL
   postgres:
     image: postgres:12-alpine
-    restart: always
     ports:
       - "5432:5432"
     environment:
@@ -16,16 +13,18 @@ services:
       timeout: 5s
       retries: 5
 
-  # Сервис тестируемого приложения (SUT)
   aqa-shop:
-    build: . # Можно заменить на image, если приложение уже есть в образе
+    build: .
     ports:
       - "8080:8080"
-    volumes:
-      # Важно: СUT должен быть доступен по имени файла
-      - ./aqa-shop.jar:/app/aqa-shop.jar
-      - ./application.properties:/app/application.properties
+    environment:
+      # ВАЖНО: Соблюдай регистр и названия
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: pass
+      # Симуляторы банков (чтобы кнопка на сайте работала)
+      SPRING_CREDIT_GATE_URL: http://localhost:9999
+      SPRING_PAYMENT_GATE_URL: http://localhost:9999
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["java", "-jar", "aqa-shop.jar"]

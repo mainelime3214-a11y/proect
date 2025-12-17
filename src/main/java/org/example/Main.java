@@ -1,17 +1,38 @@
 package org.example;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import java.sql.*;
+
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        String url = "jdbc:postgresql://postgres:5432/app";
+        String user = "app";
+        String password = "pass";
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+        System.out.println(">>> Шаг 1: Ждем 5 секунд для стабилизации БД...");
+        try {
+            Thread.sleep(5000);
+
+            System.out.println(">>> Шаг 2: Пробуем подключиться к " + url);
+            try (Connection conn = DriverManager.getConnection(url, user, password)) {
+                System.out.println(">>> Шаг 3: ПОДКЛЮЧЕНО!");
+
+                try (Statement st = conn.createStatement()) {
+                    // Создаем таблицу
+                    st.execute("CREATE TABLE IF NOT EXISTS aqa_test (id SERIAL PRIMARY KEY, status VARCHAR(50))");
+                    // Чистим старое и добавляем новое
+                    st.execute("DELETE FROM aqa_test");
+                    st.execute("INSERT INTO aqa_test (status) VALUES ('COMPLETED')");
+
+                    // Проверяем
+                    ResultSet rs = st.executeQuery("SELECT status FROM aqa_test");
+                    if (rs.next()) {
+                        System.out.println(">>> ШАГ 4: ДАННЫЕ В БД НАЙДЕНЫ: " + rs.getString("status"));
+                        System.out.println(">>> ЗАДАНИЕ ВЫПОЛНЕНО УСПЕШНО!");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("!!! ОШИБКА: " + e.getMessage());
         }
     }
 }

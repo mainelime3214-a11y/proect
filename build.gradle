@@ -1,0 +1,108 @@
+// Подключаем плагины Gradle
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.11.2' // Плагин Allure
+}
+
+// Настройки проекта и кодировки
+group 'ru.netology'
+version '1.0-SNAPSHOT'
+
+// Настройки кодировки и версии Java
+sourceCompatibility = 17
+
+
+
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+// Конфигурация репозиториев
+// Конфигурация репозиториев
+
+
+// Конфигурация Allure
+allure {
+    version = '2.19.0' // Версия Allure Framework (Синхронизировано с зависимостями)
+    autoconfigure = true
+}
+repositories {
+    mavenCentral()
+}
+// Зависимости проекта
+dependencies {
+    // JUnit 5
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
+
+    // Allure Report
+    testImplementation 'io.qameta.allure:allure-junit5:2.19.0' // Исправленная рабочая версия
+
+    // SQL и База данных
+    implementation 'org.postgresql:postgresql:42.6.0' // Драйвер PostgreSQL
+    implementation 'com.h2database:h2:2.2.220' // Драйвер H2
+    implementation 'commons-dbutils:commons-dbutils:1.7' // Утилиты для работы с БД
+
+    // --- LOMBOK (ИСПРАВЛЕНИЕ: Добавлен для основного кода) ---
+
+    // Lombok для основного кода (если аннотации используются в src/main/java)
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Lombok для тестового кода
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // REST Assured (если используете API-тестирование)
+    implementation 'io.rest-assured:rest-assured:5.3.0'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+
+// Конфигурация задач (tasks)
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+
+    // САМЫЙ НАДЕЖНЫЙ СПОСОБ УКАЗАТЬ ПУТЬ ALLURE:
+    systemProperty 'allure.results.directory', 'build/reports/allure-results'
+}
+// !!! УБЕДИТЕСЬ, ЧТО ЭТОТ БЛОК ПРИСУТСТВУЕТ В build.gradle !!!
+java {
+    toolchain {11
+        // Установите JDK 17 или 21. Если вы оставите это пустым,
+        // Gradle может использовать старую версию из PATH.
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'org.example.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+// 1. Блок зависимостей должен быть СНАРУЖИ
+dependencies {
+    testImplementation 'com.codeborne:selenide:7.0.4' // или твоя версия
+    testImplementation 'io.qameta.allure:allure-selenide:2.24.0'
+    // ... остальные библиотеки
+}
+
+// 2. Блок настройки JAR тоже сам по себе
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'org.example.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+
