@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+  # Сервис базы данных PostgreSQL
+  postgres:
+    image: postgres:12-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Сервис тестируемого приложения (SUT)
+  aqa-shop:
+    build: . # Можно заменить на image, если приложение уже есть в образе
+    ports:
+      - "8080:8080"
+    volumes:
+      # Важно: СUT должен быть доступен по имени файла
+      - ./aqa-shop.jar:/app/aqa-shop.jar
+      - ./application.properties:/app/application.properties
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["java", "-jar", "aqa-shop.jar"]
